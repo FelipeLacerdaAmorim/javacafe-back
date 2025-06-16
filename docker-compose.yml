@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      POSTGRES_DB: cafeteria
+    ports:
+      - "5432:5432"
+    networks:
+      - cafeteria-net
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: backend
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_DB_HOST}:${POSTGRES_DB_PORT}/cafeteria
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_DB_PASSWORD}
+    ports:
+      - "8080:8080"
+    networks:
+      - cafeteria-net
+
+networks:
+  cafeteria-net:
+
+volumes:
+  pgdata:
