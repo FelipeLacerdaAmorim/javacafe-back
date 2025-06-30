@@ -32,7 +32,6 @@ Backend para o sistema de pedidos personalizados para cafeteria, implementado em
 
 ```bash
 git clone https://github.com/FelipeLacerdaAmorim/javacafe-back.git
-cd javacafe-back
 ```
 
 2. Configure o arquivo de variavel de ambiente .env com seu usuario e senha do banco:
@@ -43,6 +42,7 @@ POSTGRES_DB_PASSWORD=<senha>
 
 3. Gerar build do projeto:
 ```bash
+## Dentro do projeto
 mvn clean package install
 ```
 
