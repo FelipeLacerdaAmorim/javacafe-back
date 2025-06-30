@@ -1,0 +1,7 @@
+INSERT INTO produtos (nome, descricao, preco, tipo, categoria, imagem_url, ativo) VALUES
+                                                                                      ('Café Expresso', 'Café expresso forte e encorpado', 5.00, 'CAFE', 'Cafés', 'https://exemplo.com/imagens/cafe_expresso.jpg', true),
+                                                                                      ('Café Latte', 'Café com leite cremoso', 7.50, 'CAFE', 'Cafés', 'https://exemplo.com/imagens/cafe_latte.jpg', true),
+                                                                                      ('Chá Verde', 'Chá verde natural e refrescante', 4.00, 'CHA', 'Chás', 'https://exemplo.com/imagens/cha_verde.jpg', true),
+                                                                                      ('Chá Preto', 'Chá preto tradicional', 3.50, 'CHA', 'Chás', 'https://exemplo.com/imagens/cha_preto.jpg', true),
+                                                                                      ('Suco de Laranja', 'Suco natural de laranja', 6.00, 'SUCO', 'Sucos', 'https://exemplo.com/imagens/suco_laranja.jpg', true),
+                                                                                      ('Suco de Abacaxi', 'Suco natural de abacaxi', 6.50, 'SUCO', 'Sucos', 'https://exemplo.com/imagens/suco_abacaxi.jpg', true);

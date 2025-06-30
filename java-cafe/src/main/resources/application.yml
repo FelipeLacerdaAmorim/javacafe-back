@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: java-cafe
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_DB_HOST:localhost}:${POSTGRES_DB_PORT:5432}/cafeteria
+    username: ${POSTGRES_DB_USER:postgres}
+    password: ${POSTGRES_DB_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  main:
+    allow-circular-references: true
