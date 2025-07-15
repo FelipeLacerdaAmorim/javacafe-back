@@ -6,5 +6,5 @@ public record PedidoDTO(
         Long clienteId,
         List<ItemPedidoDTO> itens,
         boolean pagamentoRealizado,
-        ClienteTemporarioDTO clienteTemporario
+        String observacao
 ) {}

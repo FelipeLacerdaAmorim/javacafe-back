@@ -1,110 +1,84 @@
 package com.cafeteria.java_cafe.bo;
 
-import com.cafeteria.java_cafe.decorator.Bebida;
-import com.cafeteria.java_cafe.decorator.IngredienteDecoratorFactory;
 import com.cafeteria.java_cafe.dto.ItemPedidoDTO;
 import com.cafeteria.java_cafe.dto.PedidoRequestDTO;
-import com.cafeteria.java_cafe.dto.PedidoResponseDTO;
-import com.cafeteria.java_cafe.factory.BebidaFactory;
-import com.cafeteria.java_cafe.factory.FabricaBebidasProvider;
 import com.cafeteria.java_cafe.model.*;
 import com.cafeteria.java_cafe.model.enums.StatusPedido;
-import com.cafeteria.java_cafe.observer.ClienteObserver;
-import com.cafeteria.java_cafe.observer.CozinhaObserver;
 import com.cafeteria.java_cafe.repository.*;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PedidoBO {
 
-    private final UsuarioRepository usuarioRepo; // antes era ClienteRepository
-    private final ProdutoRepository produtoRepo;
-    private final IngredienteRepository ingredienteRepo;
-    private final PedidoRepository pedidoRepo;
+    private final PedidoRepository pedidoRepository;
+    private final ProdutoRepository produtoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public PedidoBO(
-            UsuarioRepository usuarioRepo,
-            ProdutoRepository produtoRepo,
-            IngredienteRepository ingredienteRepo,
-            PedidoRepository pedidoRepo
-    ) {
-        this.usuarioRepo = usuarioRepo;
-        this.produtoRepo = produtoRepo;
-        this.ingredienteRepo = ingredienteRepo;
-        this.pedidoRepo = pedidoRepo;
-    }
+    @Transactional
+    public Pedido criarPedido(PedidoRequestDTO dto, Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-    public PedidoResponseDTO criarPedido(PedidoRequestDTO dto) {
-        // Buscar cliente
-        Usuario usuario = usuarioRepo.findById(dto.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        List<Long> idsProdutos = dto.itens().stream()
+                .map(ItemPedidoDTO::produtoId)
+                .collect(Collectors.toList());
 
-        Pedido pedido = new Pedido();
-        pedido.setUsuario(usuario);
-        pedido.setStatus(StatusPedido.RECEBIDO);
+        List<Produto> produtos = produtoRepository.findAllById(idsProdutos);
 
         List<ItemPedido> itens = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
 
+        Pedido pedido = new Pedido(); // inicializa para poder associar nos itens
+        pedido.setUsuario(usuario);
+        pedido.setStatus(StatusPedido.RECEBIDO);
+        pedido.setObservacao(dto.observacao());
+
         for (ItemPedidoDTO itemDTO : dto.itens()) {
-            Produto produto = produtoRepo.findById(itemDTO.produtoId())
+            Produto produto = produtos.stream()
+                    .filter(p -> p.getId().equals(itemDTO.produtoId()))
+                    .findFirst()
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            BebidaFactory factory = FabricaBebidasProvider.getFactory(produto.getTipo());
-            Bebida bebida = factory.criarBebida();
-
-            for (Long ingId : itemDTO.ingredientesIds()) {
-                Ingrediente ing = ingredienteRepo.findById(ingId)
-                        .orElseThrow(() -> new RuntimeException("Ingrediente não encontrado"));
-                bebida = IngredienteDecoratorFactory.decorar(bebida, ing);
-            }
-
             ItemPedido item = new ItemPedido();
-            item.setPedido(pedido);
             item.setProduto(produto);
-            item.setIngredientes(resolverIngredientes(itemDTO.ingredientesIds()));
             item.setQuantidade(itemDTO.quantidade());
+            item.setPrecoUnitario(produto.getPreco());
+            item.setPedido(pedido);
 
-            BigDecimal subtotal = bebida.getPreco().multiply(BigDecimal.valueOf(item.getQuantidade()));
-            item.setSubtotal(subtotal);
-
-            total = total.add(subtotal);
             itens.add(item);
+
+            total = total.add(produto.getPreco().multiply(BigDecimal.valueOf(itemDTO.quantidade())));
         }
 
         pedido.setItens(itens);
         pedido.setTotal(total);
 
-        ClienteObserver clienteObs = new ClienteObserver();
-        CozinhaObserver cozinhaObs = new CozinhaObserver();
-        pedido.adicionarObservador(clienteObs);
-        pedido.adicionarObservador(cozinhaObs);
-        pedido.notificarObservadores(pedido);
-
-        Pedido salvo = pedidoRepo.save(pedido);
-        return new PedidoResponseDTO(salvo.getId(), salvo.getStatus().name(), salvo.getTotal());
+        return pedidoRepository.save(pedido);
     }
 
-    private List<Ingrediente> resolverIngredientes(List<Long> ids) {
-        return ids.stream()
-                .map(id -> ingredienteRepo.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Ingrediente não encontrado: " + id)))
-                .toList();
+    public List<Pedido> listarPedidosPorUsuario(Long usuarioId) {
+        return pedidoRepository.findByUsuarioId(usuarioId);
     }
 
-    public PedidoResponseDTO buscarPorId(Long id) {
-        Pedido pedido = pedidoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
-        return new PedidoResponseDTO(pedido.getId(), pedido.getStatus().name(), pedido.getTotal());
-    }
+    @Transactional
+    public Pedido atualizarStatus(Long pedidoId, StatusPedido novoStatus) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado"));
 
-    public void atualizarStatus(Pedido pedido, StatusPedido novoStatus) {
         pedido.setStatus(novoStatus);
-        pedido.notificarObservadores(pedido);
-        pedidoRepo.save(pedido);
+        return pedidoRepository.save(pedido);
+    }
+
+    public Optional<Pedido> buscarPorId(Long id) {
+        return pedidoRepository.findById(id);
     }
 }

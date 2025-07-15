@@ -6,7 +6,7 @@ import com.cafeteria.java_cafe.model.enums.TipoProduto;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BebidaFactory implements ProdutoFactory {
+public class SobremesaFactory implements ProdutoFactory {
 
     @Override
     public Produto criarProduto(ProdutoRequestDTO dto) {
@@ -17,7 +17,7 @@ public class BebidaFactory implements ProdutoFactory {
                 .categoria(dto.getCategoria())
                 .imagemUrl(dto.getImagemUrl())
                 .ativo(true)
-                .tipo(TipoProduto.BEBIDA)
+                .tipo(TipoProduto.SOBREMESA)
                 .build();
     }
 }

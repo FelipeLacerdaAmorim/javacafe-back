@@ -4,10 +4,16 @@ import com.cafeteria.java_cafe.model.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@Getter @Setter
+@Table(name = "usuarios")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Usuario {
 
     @Id
@@ -24,10 +30,6 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private TipoUsuario tipoUsuario;
 
-    private boolean fidelidade;
-
-    @OneToOne
-    @JoinColumn(name = "cliente_id")
-    private Cliente cliente;
-
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Pedido> pedidos = new ArrayList<>();
 }

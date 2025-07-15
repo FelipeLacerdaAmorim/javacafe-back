@@ -6,7 +6,6 @@ import com.cafeteria.java_cafe.model.Pedido;
 import com.cafeteria.java_cafe.model.Produto;
 import com.cafeteria.java_cafe.model.Usuario;
 import com.cafeteria.java_cafe.model.enums.StatusPedido;
-import com.cafeteria.java_cafe.model.enums.TipoUsuario;
 import com.cafeteria.java_cafe.repository.PedidoRepository;
 import com.cafeteria.java_cafe.repository.ProdutoRepository;
 import com.cafeteria.java_cafe.repository.UsuarioRepository;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -29,32 +27,15 @@ public class PedidoService {
 
     @Transactional
     public PedidoResponseDTO criarPedido(PedidoRequestDTO dto) {
-        Usuario usuario;
-
-        if (dto.clienteId() != null) {
-
-            usuario = usuarioRepository.findById(dto.clienteId())
-                    .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-        } else {
-
-            if (!dto.pagamentoRealizado()) {
-                throw new RuntimeException("Pagamento obrigatório para pedidos sem login.");
-            }
-
-            ClienteTemporarioDTO tempDTO = dto.clienteTemporario();
-            if (tempDTO == null || tempDTO.nome() == null || tempDTO.nome().isBlank()) {
-                throw new RuntimeException("Dados do cliente temporário são obrigatórios.");
-            }
-
-            usuario = new Usuario();
-            usuario.setNome(tempDTO.nome());
-            usuario.setEmail(tempDTO.email());
-            usuario.setTipoUsuario(TipoUsuario.CLIENTE_TEMPORARIO);
-            usuario = usuarioRepository.save(usuario);
+        if (dto.usuarioId() == null) {
+            throw new RuntimeException("Usuário deve estar logado para criar pedido.");
         }
 
+        Usuario cliente = usuarioRepository.findById(dto.usuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
         Pedido pedido = new Pedido();
-        pedido.setUsuario(usuario);
+        pedido.setUsuario(cliente);
         pedido.setStatus(StatusPedido.RECEBIDO);
 
         BigDecimal total = BigDecimal.ZERO;
@@ -82,37 +63,16 @@ public class PedidoService {
         return new PedidoResponseDTO(pedido.getId(), pedido.getStatus().name(), pedido.getTotal());
     }
 
-    @Transactional
-    public PedidoDTO criarPedidoComClienteTemporario(PedidoDTO dto) {
+    public List<PedidoResponseDTO> listarPedidos() {
+        List<Pedido> pedidos = pedidoRepository.findAll();
 
-        Usuario cliente = new Usuario();
-        cliente.setNome(dto.clienteTemporario().nome());
-        cliente.setEmail(dto.clienteTemporario().email());
-        cliente.setTipoUsuario(TipoUsuario.CLIENTE_TEMPORARIO);
-        cliente = usuarioRepository.save(cliente);
-
-        PedidoRequestDTO pedidoRequestDTO = converterParaPedidoRequestDTO(dto, cliente.getId());
-
-        PedidoResponseDTO pedidoResponse = criarPedido(pedidoRequestDTO);
-
-        return converterParaPedidoDTO(pedidoResponse);
+        return pedidos.stream()
+                .map(pedido -> new PedidoResponseDTO(
+                        pedido.getId(),
+                        pedido.getStatus().name(),
+                        pedido.getTotal()
+                ))
+                .toList();
     }
 
-    public PedidoRequestDTO converterParaPedidoRequestDTO(PedidoDTO dto, Long clienteId) {
-        return new PedidoRequestDTO(
-                clienteId,
-                dto.itens(),
-                dto.pagamentoRealizado(),
-                dto.clienteTemporario()
-        );
-    }
-
-    public PedidoDTO converterParaPedidoDTO(PedidoResponseDTO responseDTO) {
-        return new PedidoDTO(
-                null,
-                Collections.emptyList(),
-                true,
-                null
-        );
-    }
 }

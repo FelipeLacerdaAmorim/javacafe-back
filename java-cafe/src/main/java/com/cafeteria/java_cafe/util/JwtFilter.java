@@ -2,8 +2,7 @@ package com.cafeteria.java_cafe.util;
 
 import com.cafeteria.java_cafe.service.oauth.JwtService;
 import com.cafeteria.java_cafe.service.oauth.UserDetailsServiceImpl;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,28 +14,24 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class JwtFilter extends OncePerRequestFilter {
+public class JwtFilter implements Filter {
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
 
-    private static final List<String> ENDPOINTS_PUBLICOS = List.of(
-            "/auth/login",
-            "/auth/registro",
-            "/pedidos/sem-login"
-    );
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
 
-        String servletPath = request.getServletPath();
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        if (ENDPOINTS_PUBLICOS.contains(servletPath)) {
+        String path = request.getServletPath();
+
+        if (path.startsWith("/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -44,7 +39,8 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token JWT ausente ou inválido.");
             return;
         }
 
@@ -61,6 +57,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token JWT inválido.");
+                return;
             }
         }
 
