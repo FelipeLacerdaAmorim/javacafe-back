@@ -24,4 +24,11 @@ public abstract class Subject {
             o.atualizar(pedido);
         }
     }
+
+    public void limparObservadores() {
+        observadores.clear();
+    }
+    public List<Observador> getObservadores() {
+        return observadores;
+    }
 }

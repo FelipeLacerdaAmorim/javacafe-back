@@ -29,9 +29,19 @@ public class JwtFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
+        // Permitir preflight CORS sem exigir autenticação
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
         String path = request.getServletPath();
 
-        if (path.startsWith("/auth/")) {
+        if (
+            path.startsWith("/auth/") ||
+            ("GET".equalsIgnoreCase(request.getMethod()) && path.startsWith("/cardapio")) ||
+            path.startsWith("/ws/")
+        ) {
             filterChain.doFilter(request, response);
             return;
         }

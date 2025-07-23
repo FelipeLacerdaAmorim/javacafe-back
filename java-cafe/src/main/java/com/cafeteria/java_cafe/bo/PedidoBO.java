@@ -40,7 +40,6 @@ public class PedidoBO {
         Pedido pedido = new Pedido(); // inicializa para poder associar nos itens
         pedido.setUsuario(usuario);
         pedido.setStatus(StatusPedido.RECEBIDO);
-        pedido.setObservacao(dto.observacao());
 
         for (ItemPedidoDTO itemDTO : dto.itens()) {
             Produto produto = produtos.stream()

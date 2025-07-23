@@ -9,6 +9,6 @@ public class RecebidoState implements PedidoState {
 
     @Override
     public String getNomeEstado() {
-        return "EM_PREPARO";
+        return "RECEBIDO";
     }
 }

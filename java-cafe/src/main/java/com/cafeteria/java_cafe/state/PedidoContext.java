@@ -2,6 +2,7 @@ package com.cafeteria.java_cafe.state;
 
 import com.cafeteria.java_cafe.model.Pedido;
 import com.cafeteria.java_cafe.model.enums.StatusPedido;
+import com.cafeteria.java_cafe.state.FinalizadoState;
 
 public class PedidoContext {
 
@@ -14,8 +15,7 @@ public class PedidoContext {
         switch (pedido.getStatus()) {
             case RECEBIDO -> this.estadoAtual = new RecebidoState();
             case EM_PREPARO -> this.estadoAtual = new EmPreparoState();
-            case PRONTO -> this.estadoAtual = new ProntoState();
-            case ENTREGUE -> this.estadoAtual = new EntregueState();
+            case FINALIZADO -> this.estadoAtual = new FinalizadoState();
         }
     }
 

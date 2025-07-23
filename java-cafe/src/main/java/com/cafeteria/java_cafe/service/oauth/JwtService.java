@@ -8,8 +8,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 import java.security.Key;
+import java.security.PublicKey;
+import java.security.KeyFactory;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +28,33 @@ public class JwtService {
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
+    @Value("${JWT_PUBLIC_KEY:}")
+    private String jwtPublicKeyPem;
+    private PublicKey publicKey;
+    @PostConstruct
+    public void init() {
+        if (jwtPublicKeyPem != null && !jwtPublicKeyPem.isBlank()) {
+            try {
+                String publicKeyPEM = jwtPublicKeyPem
+                        .replace("-----BEGIN PUBLIC KEY-----", "")
+                        .replace("-----END PUBLIC KEY-----", "")
+                        .replaceAll("\\s", "");
+                byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
+                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                this.publicKey = kf.generatePublic(keySpec);
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao carregar chave pública JWT", e);
+            }
+        }
+    }
+
     public String generateToken(UserDetailsImpl userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("authorities", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
+        claims.put("nome", userDetails.getUsuario().getNome());
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -58,11 +85,19 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        if (publicKey != null) {
+            return Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } else {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        }
     }
 
     public boolean isTokenValido(String token, UserDetails userDetails) {

@@ -30,7 +30,7 @@ public class ItemPedido {
     @ManyToOne
     private Pedido pedido;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "item_pedido_ingredientes",
             joinColumns = @JoinColumn(name = "item_pedido_id"),

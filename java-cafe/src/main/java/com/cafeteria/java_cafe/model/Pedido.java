@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +30,14 @@ public class Pedido {
 
     private BigDecimal total;
 
+    private BigDecimal totalBase;
+
     private boolean pagamentoRealizado;
 
     private String observacao;
+
+    private LocalDateTime data;
+    private String nomeCliente;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedido> itens = new ArrayList<>();

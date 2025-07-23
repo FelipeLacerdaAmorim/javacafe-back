@@ -4,11 +4,11 @@ public class EmPreparoState implements PedidoState {
 
     @Override
     public void avancar(PedidoContext context) {
-        context.setEstado(new ProntoState());
+        context.setEstado(new FinalizadoState());
     }
 
     @Override
     public String getNomeEstado() {
-        return "PRONTO";
+        return "EM_PREPARO";
     }
 }

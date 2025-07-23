@@ -8,5 +8,6 @@ public record ItemPedidoDTO(
         String produtoNome,
         BigDecimal precoUnitario,
         int quantidade,
-        List<Long> ingredientesIds
+        List<Long> ingredientesIds,
+        List<IngredienteDTO> ingredientesDetalhados
 ) {}

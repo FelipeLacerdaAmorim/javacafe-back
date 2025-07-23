@@ -1,4 +1,5 @@
 package com.cafeteria.java_cafe.command;
 
-public class Comando {
+public interface Comando {
+    void executar();
 }
