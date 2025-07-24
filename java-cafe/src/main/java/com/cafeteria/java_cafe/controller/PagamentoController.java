@@ -1,6 +1,9 @@
 package com.cafeteria.java_cafe.controller;
 
 import com.cafeteria.java_cafe.model.enums.MetodoPagamento;
+import com.cafeteria.java_cafe.model.Pagamento;
+import com.cafeteria.java_cafe.repository.PagamentoRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,10 +13,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pagamento")
+@RequiredArgsConstructor
 public class PagamentoController {
+    private final PagamentoRepository pagamentoRepository;
 
     @GetMapping("/metodos")
     public ResponseEntity<List<Map<String, Object>>> listarMetodosPagamento() {
@@ -28,6 +35,22 @@ public class PagamentoController {
                 })
                 .toList();
         return ResponseEntity.ok(metodos);
+    }
+
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> listarPagamentos() {
+        List<Pagamento> pagamentos = pagamentoRepository.findAll();
+        List<Map<String, Object>> resposta = pagamentos.stream().map(pagamento -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", pagamento.getId());
+            map.put("valorPago", pagamento.getValorPago());
+            map.put("metodo", pagamento.getMetodo());
+            map.put("descontoAplicado", pagamento.getDescontoAplicado());
+            map.put("pedidoId", pagamento.getPedido() != null ? pagamento.getPedido().getId() : null);
+            return map;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(resposta);
     }
 
     private String getDescricao(MetodoPagamento metodo) {

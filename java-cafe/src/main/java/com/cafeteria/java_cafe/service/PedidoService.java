@@ -86,12 +86,18 @@ public class PedidoService {
             item.setQuantidade(itemDTO.quantidade());
             item.setPrecoUnitario(produto.getPreco());
             item.setPedido(pedido);
+            BigDecimal precoIngredientes = BigDecimal.ZERO;
             // Associar ingredientes selecionados
             if (itemDTO.ingredientesIds() != null && !itemDTO.ingredientesIds().isEmpty()) {
                 List<Ingrediente> ingredientes = ingredienteRepository.findAllById(itemDTO.ingredientesIds());
                 item.setIngredientes(ingredientes);
+                precoIngredientes = ingredientes.stream()
+                    .map(Ingrediente::getPrecoAdicional)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             }
-            total = total.add(produto.getPreco().multiply(BigDecimal.valueOf(itemDTO.quantidade())));
+            BigDecimal subtotal = produto.getPreco().add(precoIngredientes).multiply(BigDecimal.valueOf(itemDTO.quantidade()));
+            item.setSubtotal(subtotal);
+            total = total.add(subtotal);
             itens.add(item);
         }
         pedido.setItens(itens);

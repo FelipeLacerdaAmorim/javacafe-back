@@ -6,6 +6,6 @@ public class DescontoPix implements DescontoStrategy {
 
     @Override
     public BigDecimal calcularDesconto(BigDecimal valorOriginal) {
-        return valorOriginal.multiply(BigDecimal.valueOf(0.05));
+        return valorOriginal.multiply(BigDecimal.valueOf(0.10));
     }
 }

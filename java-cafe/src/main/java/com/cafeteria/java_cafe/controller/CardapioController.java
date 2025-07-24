@@ -2,6 +2,7 @@ package com.cafeteria.java_cafe.controller;
 
 import com.cafeteria.java_cafe.dto.ProdutoDTO;
 import com.cafeteria.java_cafe.dto.ProdutoRequestDTO;
+import com.cafeteria.java_cafe.dto.ProdutoIngredientesDTO;
 import com.cafeteria.java_cafe.model.Produto;
 import com.cafeteria.java_cafe.model.enums.TipoProduto;
 import com.cafeteria.java_cafe.service.CardapioService;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.cafeteria.java_cafe.model.Ingrediente;
 
 @RestController
 @RequestMapping("/cardapio")
@@ -51,6 +53,13 @@ public class CardapioController {
         return ResponseEntity.ok(bebidas);
     }
 
+    @PreAuthorize("permitAll()")
+    @GetMapping("/ingredientes")
+    public ResponseEntity<List<Ingrediente>> listarIngredientes() {
+        List<Ingrediente> ingredientes = cardapioService.listarIngredientes();
+        return ResponseEntity.ok(ingredientes);
+    }
+
     @PreAuthorize("hasAnyRole('GERENTE', 'ADMINISTRADOR')")
     @PostMapping("/produtos/{tipo}")
     public ResponseEntity<Produto> cadastrarProduto(
@@ -59,5 +68,31 @@ public class CardapioController {
     ) {
         Produto produto = cardapioService.cadastrarProduto(dto, tipo);
         return ResponseEntity.status(HttpStatus.CREATED).body(produto);
+    }
+
+    @PreAuthorize("hasAnyRole('GERENTE', 'ADMINISTRADOR')")
+    @PutMapping("/produtos/{id}")
+    public ResponseEntity<Produto> atualizarProduto(
+            @PathVariable Long id,
+            @RequestBody @Valid ProdutoRequestDTO dto
+    ) {
+        Produto produto = cardapioService.atualizarProduto(id, dto);
+        if (produto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(produto);
+    }
+
+    @PreAuthorize("hasAnyRole('GERENTE', 'ADMINISTRADOR')")
+    @PutMapping("/produtos/{id}/ingredientes")
+    public ResponseEntity<Void> atualizarIngredientesProduto(
+            @PathVariable Long id,
+            @RequestBody ProdutoIngredientesDTO dto
+    ) {
+        boolean sucesso = cardapioService.atualizarIngredientesProduto(id, dto.ingredientesIds());
+        if (!sucesso) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
     }
 }

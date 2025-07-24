@@ -29,11 +29,11 @@ public class PedidoController {
 
     @PostMapping
     @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<PedidoDTO> criarPedido(@RequestBody PedidoDTO dto) {
+    public ResponseEntity<PedidoDTO> criarPedido(@RequestBody PedidoRequestDTO dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long usuarioId = userDetails.getUsuario().getId();
-        PedidoResponseDTO response = pedidoService.criarPedido(converterParaPedidoRequestDTO(dto), usuarioId);
+        PedidoResponseDTO response = pedidoService.criarPedido(dto, usuarioId);
         PedidoDTO pedidoDTO = converterParaPedidoDTO(response);
         return ResponseEntity.ok(pedidoDTO);
     }

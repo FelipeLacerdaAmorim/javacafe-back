@@ -49,7 +49,7 @@ public class AuthController {
         novo.setNome(dto.nome());
         novo.setEmail(dto.email());
         novo.setSenha(passwordEncoder.encode(dto.senha()));
-        novo.setTipoUsuario(TipoUsuario.valueOf(dto.tipoUsuario().toUpperCase()));
+        novo.setTipoUsuario(TipoUsuario.CLIENTE);
 
         usuarioRepo.save(novo);
 
