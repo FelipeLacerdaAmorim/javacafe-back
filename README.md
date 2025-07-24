@@ -19,35 +19,84 @@ Backend para o sistema de pedidos personalizados para cafeteria, implementado em
 
 ## Como Executar
 
-### Pré-requisitos
+### Opção 1: Rodando TUDO via Docker (recomendado para quem NÃO tem Java instalado)
 
-- Docker instalado e funcionando na sua máquina
-- Docker Compose (versão compatível)
+> **Você só precisa do Docker instalado!**
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/FelipeLacerdaAmorim/javacafe-back.git
+   cd javacafe-back
+   ```
+
+2. **Configure o arquivo `.env`** (opcional, já vem com padrão):
+   ```env
+   POSTGRES_DB_USER=postgres
+   POSTGRES_DB_PASSWORD=postgres
+   ```
+
+3. **Suba tudo com Docker Compose:**
+   ```bash
+   docker-compose up --build -d
+   ```
+   Isso irá:
+   - Subir o banco PostgreSQL
+   - Fazer build e rodar a aplicação Java automaticamente
+
+4. **Acesse a API:**
+   - Por padrão, estará em: [http://localhost:8080](http://localhost:8080)
+
+5. **Parar tudo:**
+   ```bash
+   docker-compose down
+   ```
 
 ---
 
-### Passos para rodar a aplicação
+### Opção 2: Rodando o banco via Docker e a aplicação localmente (console)
 
-1. Clone o repositório:
+> **Você precisa do Docker para o banco e do Java 17+ e Maven instalados para rodar a aplicação localmente.**
 
-```bash
-git clone https://github.com/FelipeLacerdaAmorim/javacafe-back.git
-```
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/FelipeLacerdaAmorim/javacafe-back.git
+   cd javacafe-back
+   ```
 
-2. Configure o arquivo de variavel de ambiente .env com seu usuario e senha do banco:
-```env
-POSTGRES_DB_USER=<usuario>
-POSTGRES_DB_PASSWORD=<senha>
-```
+2. **Configure o arquivo `.env`** (opcional, já vem com padrão):
+   ```env
+   POSTGRES_DB_USER=postgres
+   POSTGRES_DB_PASSWORD=postgres
+   ```
 
-3. Gerar build do projeto:
-```bash
-## Dentro do projeto
-mvn clean package install
-```
+3. **Suba apenas o banco de dados:**
+   ```bash
+   docker-compose up -d db
+   ```
+   Isso irá subir apenas o container do PostgreSQL.
 
-4. Executar compose:
-```bash
-## No diretório do docker-compose.yml
-docker-compose up -d
-```
+4. **Build e rode a aplicação Java localmente:**
+   ```bash
+   cd java-cafe
+   mvn clean package
+   java -jar target/*.jar
+   ```
+   Ou rode direto pelo Maven:
+   ```bash
+   mvn spring-boot:run
+   ```
+
+5. **Acesse a API:**
+   - Por padrão, estará em: [http://localhost:8080](http://localhost:8080)
+
+6. **Parar o banco:**
+   ```bash
+   docker-compose down
+   ```
+
+---
+
+## Observações
+- O projeto já cria as tabelas e dados iniciais automaticamente.
+- Se precisar alterar portas ou configs, edite o `docker-compose.yml` e/ou `application.yml`.
+- Para dúvidas, consulte a documentação dos endpoints ou abra uma issue.
